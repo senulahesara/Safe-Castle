@@ -5,10 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react"; // Example icon for alert, install if needed
-
-// Add this if you haven't already:
-// npx shadcn-ui@latest add alert
+import { Terminal } from "lucide-react";
 
 interface AnalysisResult {
   harmless: number;
@@ -34,7 +31,7 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormFormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) {
       setError("Please enter a URL.");
@@ -60,28 +57,46 @@ export default function Home() {
       }
 
       const submitData = await submitResponse.json();
-      const analysisId = submitData.data.id;
+      const urlHash = submitData.urlHash;
+      const needsPoll = submitData.needsPoll;
 
       let analysisResult: AnalysisData | null = null;
-      let attempts = 0;
-      const maxAttempts = 15; // Increased attempts for potentially longer analysis times
-      const pollInterval = 3000;
 
-      while (attempts < maxAttempts) {
-        const reportResponse = await fetch(`/api/get-report?analysisId=${analysisId}`);
-        if (!reportResponse.ok) {
-          const errorData = await reportResponse.json();
-          throw new Error(errorData.message || "Failed to retrieve analysis report.");
+      if (!needsPoll) {
+        // Immediate result from cache/existing recent scan
+        const existingAnalysis = submitData.analysis;
+        analysisResult = {
+          id: existingAnalysis.id,
+          attributes: existingAnalysis.attributes,
+          link: `https://www.virustotal.com/gui/url/${urlHash}/detection`,
+        };
+      } else {
+        const analysisId = submitData.data.id;
+
+        let attempts = 0;
+        const maxAttempts = 15; // Increased attempts for potentially longer analysis times
+        const pollInterval = 3000;
+
+        while (attempts < maxAttempts) {
+          const reportResponse = await fetch(`/api/get-report?analysisId=${analysisId}`);
+          if (!reportResponse.ok) {
+            const errorData = await reportResponse.json();
+            throw new Error(errorData.message || "Failed to retrieve analysis report.");
+          }
+          const reportData = await reportResponse.json();
+
+          if (reportData.data && reportData.data.attributes.status === "completed") {
+            analysisResult = {
+              id: reportData.data.id,
+              attributes: reportData.data.attributes,
+              link: `https://www.virustotal.com/gui/url/${urlHash}/detection`,
+            };
+            break;
+          }
+
+          attempts++;
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
         }
-        const reportData = await reportResponse.json();
-
-        if (reportData.data && reportData.data.attributes.status === "completed") {
-          analysisResult = reportData.data;
-          break;
-        }
-
-        attempts++;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
       }
 
       if (analysisResult) {
