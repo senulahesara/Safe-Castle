@@ -4,7 +4,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const analysisId = searchParams.get('analysisId');
 
-  const apiKey = process.env.VIRUSTOTAL_API_KEY; // Load from server env
+  const apiKey = process.env.VIRUSTOTAL_API_KEY; 
 
   if (!analysisId) {
     return NextResponse.json({ message: 'Analysis ID is required.' }, { status: 400 });
