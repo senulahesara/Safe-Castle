@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { useSearchParams } from "next/navigation";
 
 interface AnalysisResult {
     harmless: number;
@@ -31,10 +32,10 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AnalysisData | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const searchParams = useSearchParams();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!url) {
+    const submitUrl = async (urlToCheck: string) => {
+        if (!urlToCheck) {
             setError("Please enter a URL.");
             return;
         }
@@ -49,7 +50,7 @@ export default function Home() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ url }),
+                body: JSON.stringify({ url: urlToCheck }),
             });
 
             if (!submitResponse.ok) {
@@ -64,7 +65,6 @@ export default function Home() {
             let analysisResult: AnalysisData | null = null;
 
             if (!needsPoll) {
-                // Immediate result from cache/existing recent scan
                 const existingAnalysis = submitData.analysis;
                 analysisResult = {
                     id: existingAnalysis.id,
@@ -75,7 +75,7 @@ export default function Home() {
                 const analysisId = submitData.data.id;
 
                 let attempts = 0;
-                const maxAttempts = 15; // Increased attempts for potentially longer analysis times
+                const maxAttempts = 15;
                 const pollInterval = 3000;
 
                 while (attempts < maxAttempts) {
@@ -112,6 +112,11 @@ export default function Home() {
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await submitUrl(url);
+    };
+
     // --- New function to interpret the results ---
     const interpretResults = (stats: AnalysisResult) => {
         const totalScans = stats.harmless + stats.malicious + stats.suspicious + stats.undetected + stats.timeout;
@@ -121,32 +126,32 @@ export default function Home() {
         let summary = "";
         let recommendation = "";
         let impact = "";
-        let variant = "default"; // For shadcn Alert component styling
+        let variant = "default";
 
         if (stats.malicious > 0) {
             summary = `**HIGH RISK - Malicious URL detected!** ${stats.malicious} security vendors flagged this URL as malicious.`;
             recommendation = "Absolutely DO NOT visit this URL. It is highly dangerous.";
-            impact = "Visiting this URL could lead to malware infection, phishing attempts (stealing your login credentials, financial information), or other severe security breaches. Your personal data is at extreme risk.";
+            impact = "Visiting this URL could lead to malware infection, phishing attempts, or severe security breaches.";
             variant = "destructive";
         } else if (stats.suspicious > 0) {
             summary = `**MODERATE RISK - Suspicious activity detected!** ${stats.suspicious} security vendors flagged this URL as suspicious.`;
-            recommendation = "Proceed with extreme caution, or preferably, avoid visiting this URL. It may be a developing threat or pose privacy risks.";
-            impact = "This URL might lead to phishing attempts, unwanted software installation, or privacy invasion (collecting browsing data, IP address). While not outright malicious yet, it could evolve or be used for targeted attacks.";
-            variant = "warning"; // Assuming you have a 'warning' variant or use destructive for similar effect
+            recommendation = "Proceed with extreme caution, or preferably, avoid visiting this URL.";
+            impact = "This URL might lead to phishing attempts, unwanted software installation, or privacy invasion.";
+            variant = "warning";
         } else if (stats.undetected > 0 && stats.harmless === 0) {
             summary = `**UNCERTAIN RISK - Undetected by most vendors.** ${stats.undetected} vendors did not categorize this URL.`;
-            recommendation = "Exercise caution. Without a clear 'harmless' rating, there's an inherent uncertainty. It might be a very new URL not yet analyzed, or one designed to evade detection.";
-            impact = "Potential risks are unknown. It could be harmless, but also a new, unflagged threat. Proceeding might expose you to novel phishing, malware, or data collection schemes.";
+            recommendation = "Exercise caution. Without a clear 'harmless' rating, there's uncertainty.";
+            impact = "It could be harmless, but also a new, unflagged threat.";
             variant = "warning";
         } else if (stats.harmless > 0 && stats.malicious === 0 && stats.suspicious === 0) {
             summary = `**LOW RISK - Likely Safe.** ${stats.harmless} security vendors found no malicious content.`;
-            recommendation = "This URL appears to be safe based on current scans. You can likely visit it without immediate concerns.";
-            impact = "Based on current analysis, there is no immediate indication of malicious intent or data theft. However, no scan is 100% foolproof; always be vigilant.";
-            variant = "success"; // Assuming you have a 'success' variant or use default for similar effect
+            recommendation = "This URL appears safe based on current scans.";
+            impact = "No immediate indication of malicious intent. Still, be vigilant.";
+            variant = "success";
         } else {
-            summary = "**UNCERTAIN - No clear verdict.** The analysis results are inconclusive or unique.";
-            recommendation = "Exercise caution. The URL might be new, or the scanning services couldn't provide a definitive answer.";
-            impact = "The exact risks are unclear. It's best to avoid if unsure, or only visit if you completely trust the source and understand potential unknown risks.";
+            summary = "**UNCERTAIN - No clear verdict.** The analysis results are inconclusive.";
+            recommendation = "Exercise caution. Best to avoid unless you fully trust it.";
+            impact = "Exact risks are unclear.";
             variant = "default";
         }
 
@@ -154,6 +159,14 @@ export default function Home() {
     };
 
     const currentInterpretation = result ? interpretResults(result.attributes.stats) : null;
+
+    useEffect(() => {
+        const urlFromQuery = searchParams.get("url") || "";
+        if (urlFromQuery) {
+            setUrl(urlFromQuery);
+            submitUrl(urlFromQuery); // ✅ Call cleanly instead of faking a submit event
+        }
+    }, [searchParams]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -268,7 +281,6 @@ export default function Home() {
                     )}
                 </CardContent>
             </Card>
-            <AnimatedThemeToggler />
         </div>
     );
 }
