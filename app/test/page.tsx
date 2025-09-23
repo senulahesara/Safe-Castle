@@ -1,5 +1,6 @@
-"use client";
+"use client"
 
+import React from 'react'
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,8 @@ interface AdditionalResults {
     redirectCount: number;
 }
 
-export default function Home() {
+function page() {
+
     const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AnalysisData | null>(null);
@@ -152,7 +154,7 @@ export default function Home() {
                 const phishRes = await fetch('https://openphish.com/feed.txt');
                 const phishText = await phishRes.text();
                 openPhish = phishText.split('\n').some(line => line.trim() === urlToCheck.trim());
-            } catch {}
+            } catch { }
 
             // SSL/TLS check
             let sslStatus = 'unknown';
@@ -174,7 +176,7 @@ export default function Home() {
                 } else if (sslData.status === 'ERROR') {
                     sslStatus = 'Error';
                 }
-            } catch {}
+            } catch { }
 
             // IP Geolocation
             let ipGeo = null;
@@ -193,7 +195,7 @@ export default function Home() {
                         isHighRiskGeo = highRiskCountries.includes(geoData.countryCode);
                     }
                 }
-            } catch {}
+            } catch { }
 
             // Preview screenshot (optional, replace with your key)
             const ACCESS_KEY = 'YOUR_SCREENSHOTLAYER_KEY'; // Get free key from screenshotlayer.com
@@ -210,7 +212,7 @@ export default function Home() {
                 if (response.status >= 300 && response.status < 400) {
                     redirectCount = 1; // At least one redirect detected
                 }
-            } catch {}
+            } catch { }
 
             const addResults: AdditionalResults = {
                 isSuspiciousKeywords,
@@ -317,59 +319,69 @@ export default function Home() {
         }
     }, [searchParams]);
 
+
     return (
-        <div className="dark min-h-screen bg-black flex items-center justify-center p-4 text-gray-100">
-            <Card className="w-full max-w-4xl shadow-xl border-gray-700 bg-gray-900">
-                <CardHeader className="bg-black/70 backdrop-blur-sm p-4 rounded-t-lg">
-                    <CardTitle className="text-2xl font-bold text-center text-gray-100">
-                        Phishing URL Guardian
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-sm text-center text-gray-400">
-                        Enter a URL to check if it's safe.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        {/* Left: Input */}
-                        <div className="w-full md:w-1/2">
-                            <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
-                                <Input
-                                    type="text"
-                                    placeholder="Enter URL here (e.g., https://example.com)"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    className="text-base p-2 border-2 border-gray-600 focus:border-blue-500 bg-gray-800 text-gray-100 placeholder-gray-400"
-                                />
-                                <Button
-                                    type="submit"
-                                    className="w-full text-base py-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                    disabled={loading}
-                                >
-                                    {loading ? "Checking..." : "Check URL"}
-                                </Button>
-                            </form>
+        <div className="min-h-screen dark:bg-black bg-white py-12 px-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight dark:text-gray-100 text-black">
+                        Password Strength & Breach Checker
+                    </h1>
+                    <p className="mt-2 text-gray-400 max-w-2xl">
+                        Live feedback on password strength, entropy, estimated crack times, and whether your password
+                        has appeared in known breaches. Uses the HIBP Pwned Passwords range API via  k-anonymity - your full
+                        password is <strong>NEVER</strong> sent to the server.
+                    </p>
+                </div>
 
-                            {error && (
-                                <Alert variant="destructive" className="mt-4 text-sm">
-                                    <Terminal className="h-3 w-3" />
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            )}
+                <Card className="shadow-2xl overflow-hidden dark:bg-black bg-white">
+                    <div className="md:flex flex-col md:flex-row">
+                        {/* RIGHT: INPUT + ACTIONS (desktop right column; mobile stacked above details) */}
+                        <div className="md:w-1/2 p-6 md:p-10 dark:bg-black bg-white order-first md:order-none"> {/* Added order-first for mobile */}
+                            <div className="max-w-xl mx-auto">
+                                <div className="w-full md:w-1/2">
+                                    <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
+                                        <Input
+                                            type="text"
+                                            placeholder="Enter URL here (e.g., https://example.com)"
+                                            value={url}
+                                            onChange={(e) => setUrl(e.target.value)}
+                                            className="text-base p-2 border-2 border-gray-600 focus:border-blue-500 bg-gray-800 text-gray-100 placeholder-gray-400"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            className="w-full text-base py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                            disabled={loading}
+                                        >
+                                            {loading ? "Checking..." : "Check URL"}
+                                        </Button>
+                                    </form>
 
-                            {loading && (
-                                <div className="mt-4 flex justify-center items-center">
-                                    <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <p className="ml-2 text-gray-300 text-base">{loadingMessage || "Scanning..."}</p>
+                                    {error && (
+                                        <Alert variant="destructive" className="mt-4 text-sm">
+                                            <Terminal className="h-3 w-3" />
+                                            <AlertTitle>Error</AlertTitle>
+                                            <AlertDescription>{error}</AlertDescription>
+                                        </Alert>
+                                    )}
+
+                                    {loading && (
+                                        <div className="mt-4 flex justify-center items-center">
+                                            <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <p className="ml-2 text-gray-300 text-base">{loadingMessage || "Scanning..."}</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+
+                            </div>
                         </div>
 
-                        {/* Right: Results */}
-                        <div className="w-full md:w-1/2">
+                        {/* LEFT: DETAILS (desktop: visible as left column, mobile: below input) */}
+                        <div className="md:w-1/2 dark:bg-black bg-white p-6 md:p-8 border-t md:border-t-0 md:border-l md:border-gray-700 md:order-last"> {/* Added md:order-last for mobile */}
+<div className="w-full md:w-1/2">
                             {result && currentInterpretation && additionalResults && (
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-bold text-center text-gray-100">Report</h3>
@@ -487,9 +499,12 @@ export default function Home() {
                                 </div>
                             )}
                         </div>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </Card>
+            </div>
         </div>
-    );
+    )
 }
+
+export default page
