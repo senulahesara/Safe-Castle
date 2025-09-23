@@ -33,10 +33,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster 
-        richColors
-        expand={false} 
-        position="top-right"
+        <Toaster
+          richColors
+          expand={false}
+          position="top-right"
         />
         <ThemeProvider
           attribute="class"
