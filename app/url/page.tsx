@@ -1,15 +1,18 @@
-"use client";
+"use client"
 
+import React from 'react'
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { ClipboardPaste, Link, Loader, Terminal } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Shield, MapPin, AlertTriangle, ImageIcon, Copy, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import { Label } from '@/components/ui/label';
 
 interface AnalysisResult {
     harmless: number;
@@ -35,25 +38,44 @@ interface AdditionalResults {
     sslStatus: string;
     ipGeo: { country: string; countryCode: string; regionName: string; city: string } | null;
     isHighRiskGeo: boolean;
-    screenshotUrl: string;
     redirectCount: number;
 }
 
-export default function Home() {
+function page() {
+
     const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AnalysisData | null>(null);
     const [additionalResults, setAdditionalResults] = useState<AdditionalResults | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [riskScore, setRiskScore] = useState<number>(0);
     const [loadingMessage, setLoadingMessage] = useState<string>("");
     const [copiedReport, setCopiedReport] = useState(false);
     const [copiedShare, setCopiedShare] = useState(false);
     const searchParams = useSearchParams();
 
+    // Function to check if a string is a valid URL
+    const isValidUrl = (url: string) => {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
     const submitUrl = async (urlToCheck: string) => {
+
         if (!urlToCheck) {
-            setError("Please enter a URL.");
+            toast.error("URL Required", {
+                description: "Please enter or paste a valid URL before starting the analysis.",
+            });
+            return;
+        }
+
+        if (!isValidUrl(urlToCheck)) {
+            toast.error("Invalid URL", {
+                description: "Hmm... that doesn’t look like a valid link.",
+            });
             return;
         }
 
@@ -70,7 +92,6 @@ export default function Home() {
         setLoading(true);
         setResult(null);
         setAdditionalResults(null);
-        setError(null);
         setLoadingMessage("Initiating scan...");
 
         try {
@@ -134,7 +155,9 @@ export default function Home() {
             if (analysisResult) {
                 setResult(analysisResult);
             } else {
-                setError("Analysis timed out. Please try again.");
+                toast.error("Analysis Timed Out", {
+                    description: "The scan took too long. Please try again in a moment.",
+                });
                 return;
             }
 
@@ -152,7 +175,7 @@ export default function Home() {
                 const phishRes = await fetch('https://openphish.com/feed.txt');
                 const phishText = await phishRes.text();
                 openPhish = phishText.split('\n').some(line => line.trim() === urlToCheck.trim());
-            } catch {}
+            } catch { }
 
             // SSL/TLS check
             let sslStatus = 'unknown';
@@ -174,7 +197,7 @@ export default function Home() {
                 } else if (sslData.status === 'ERROR') {
                     sslStatus = 'Error';
                 }
-            } catch {}
+            } catch { }
 
             // IP Geolocation
             let ipGeo = null;
@@ -193,14 +216,9 @@ export default function Home() {
                         isHighRiskGeo = highRiskCountries.includes(geoData.countryCode);
                     }
                 }
-            } catch {}
+            } catch { }
 
-            // Preview screenshot (optional, replace with your key)
-            const ACCESS_KEY = 'YOUR_SCREENSHOTLAYER_KEY'; // Get free key from screenshotlayer.com
-            let screenshotUrl = '';
-            if (ACCESS_KEY !== 'YOUR_SCREENSHOTLAYER_KEY') {
-                screenshotUrl = `http://api.screenshotlayer.com/api/capture?access_key=${ACCESS_KEY}&url=${encodeURIComponent(urlToCheck)}&viewport=1440x900`;
-            }
+
 
             // Redirect tracing (basic, detects if at least one redirect)
             let redirectCount = 0;
@@ -210,7 +228,7 @@ export default function Home() {
                 if (response.status >= 300 && response.status < 400) {
                     redirectCount = 1; // At least one redirect detected
                 }
-            } catch {}
+            } catch { }
 
             const addResults: AdditionalResults = {
                 isSuspiciousKeywords,
@@ -218,7 +236,6 @@ export default function Home() {
                 sslStatus,
                 ipGeo,
                 isHighRiskGeo,
-                screenshotUrl,
                 redirectCount,
             };
             setAdditionalResults(addResults);
@@ -229,7 +246,12 @@ export default function Home() {
             // Calculate risk score
             calculateRiskScore(analysisResult, addResults);
         } catch (err: any) {
-            setError(err.message || "Something went wrong. Please try again.");
+            const errorMessage =
+                (err && err.message) || "Something went wrong. Please try again.";
+
+            toast.error("Error", {
+                description: errorMessage,
+            });
         } finally {
             setLoading(false);
             setLoadingMessage("");
@@ -309,6 +331,18 @@ export default function Home() {
         setTimeout(() => setCopiedShare(false), 2000);
     };
 
+    // Handle paste from clipboard
+    const handlePaste = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setUrl(text);
+        } catch (err) {
+            toast.error("Oops!", {
+                description: "Couldn't read from your clipboard. Please try again.",
+            });
+        }
+    };
+
     useEffect(() => {
         const urlFromQuery = searchParams.get("url") || "";
         if (urlFromQuery) {
@@ -317,60 +351,63 @@ export default function Home() {
         }
     }, [searchParams]);
 
+
     return (
-        <div className="dark min-h-screen bg-black flex items-center justify-center p-4 text-gray-100">
-            <Card className="w-full max-w-4xl shadow-xl border-gray-700 bg-gray-900">
-                <CardHeader className="bg-black/70 backdrop-blur-sm p-4 rounded-t-lg">
-                    <CardTitle className="text-2xl font-bold text-center text-gray-100">
+        <div className="min-h-screen dark:bg-black bg-white py-12 px-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight dark:text-gray-100 text-black">
                         Phishing URL Guardian
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-sm text-center text-gray-400">
-                        Enter a URL to check if it's safe.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        {/* Left: Input */}
-                        <div className="w-full md:w-1/2">
-                            <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
-                                <Input
-                                    type="text"
-                                    placeholder="Enter URL here (e.g., https://example.com)"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    className="text-base p-2 border-2 border-gray-600 focus:border-blue-500 bg-gray-800 text-gray-100 placeholder-gray-400"
-                                />
-                                <Button
-                                    type="submit"
-                                    className="w-full text-base py-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                    disabled={loading}
-                                >
-                                    {loading ? "Checking..." : "Check URL"}
-                                </Button>
-                            </form>
+                    </h1>
+                    <p className="mt-2 text-gray-400 max-w-2xl">
+                        Instantly analyze any URL for safety. Checks domain reputation, SSL/TLS validity, IP geolocation, blacklist status, redirects, and suspicious keywords. offline caching, and a combined risk score (0-100) with real-time updates.
+                    </p>
+                </div>
 
-                            {error && (
-                                <Alert variant="destructive" className="mt-4 text-sm">
-                                    <Terminal className="h-3 w-3" />
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            )}
+                <Card className="shadow-2xl overflow-hidden dark:bg-black bg-white">
+                    <div className="md:flex flex-col md:flex-row">
+                        {/* RIGHT: INPUT + ACTIONS (desktop right column; mobile stacked above details) */}
+                        <div className="md:w-1/2 p-6 md:p-10 dark:bg-black bg-white order-first md:order-none"> {/* Added order-first for mobile */}
+                            <div className="max-w-xl mx-auto">
+                                <div className="w-full">
+                                    <form onSubmit={handleSubmit} className="flex flex-col">
+                                        <Label >Enter URL</Label>
+                                        <div className='mt-2'>
+                                            <Input
+                                                type="text"
+                                                placeholder="Enter URL here... (e.g., https://example.com)"
+                                                value={url}
+                                                onChange={(e) => setUrl(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                            <Button
+                                                type="submit"
+                                                className="cursor-pointer flex-1"
+                                                disabled={loading}
+                                            >
+                                                {loading ? "Checking..." : <> <Link /> Check URL</>}
+                                            </Button>
 
-                            {loading && (
-                                <div className="mt-4 flex justify-center items-center">
-                                    <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <p className="ml-2 text-gray-300 text-base">{loadingMessage || "Scanning..."}</p>
+                                            <Button type="button" variant="secondary" className="w-full sm:w-36" onClick={handlePaste}>
+                                                <ClipboardPaste /> Paste URL
+                                            </Button>
+                                        </div>
+                                    </form>
+
+                                    {loading && (
+                                        <div className="mt-4 flex justify-center items-center">
+                                            <Loader className='animate-spin h-6 w-6' />
+                                            <p className="ml-2 text-gray-300 text-base">{loadingMessage || "Scanning..."}</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
 
-                        {/* Right: Results */}
-                        <div className="w-full md:w-1/2">
-                            {result && currentInterpretation && additionalResults && (
+                        {/* LEFT: DETAILS (desktop: visible as left column, mobile: below input) */}
+                        <div className="md:w-1/2 dark:bg-black bg-white p-6 md:p-8 border-t md:border-t-0 md:border-l md:border-gray-700 md:order-last"> {/* Added md:order-last for mobile */}
+                            <div className="w-full">
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-bold text-center text-gray-100">Report</h3>
 
@@ -384,112 +421,117 @@ export default function Home() {
                                     </div>
 
                                     {/* Alert */}
-                                    <Alert
-                                        variant={currentInterpretation.variant as any}
-                                        className={`p-3 rounded-lg border text-sm ${currentInterpretation.variant === 'destructive' ? 'bg-red-900/50 border-red-600 text-red-200' : ''} ${currentInterpretation.variant === 'warning' ? 'bg-yellow-900/50 border-yellow-600 text-yellow-200' : ''} ${currentInterpretation.variant === 'success' ? 'bg-green-900/50 border-green-600 text-green-200' : ''} ${currentInterpretation.variant === 'default' ? 'bg-gray-900/50 border-gray-600 text-gray-200' : ''}`}
-                                    >
-                                        <Terminal className={`h-4 w-4 ${currentInterpretation.variant === 'destructive' ? 'text-red-400' : currentInterpretation.variant === 'warning' ? 'text-yellow-400' : currentInterpretation.variant === 'success' ? 'text-green-400' : 'text-gray-400'}`} />
-                                        <AlertTitle className="text-base font-bold mb-1">
-                                            {currentInterpretation.summary}
-                                        </AlertTitle>
-                                        <AlertDescription className="space-y-1">
-                                            <p><span className="font-semibold">Advice:</span> {currentInterpretation.recommendation}</p>
-                                            <p><span className="font-semibold">Why:</span> {currentInterpretation.impact}</p>
-                                            <p className="text-xs mt-2 text-gray-400 italic">
-                                                Note: Always be careful online. New dangers appear often.
-                                            </p>
-                                        </AlertDescription>
-                                    </Alert>
+                                    {currentInterpretation ? (
+                                        <Alert
+                                            variant={currentInterpretation.variant as any}
+                                            className={`p-3 rounded-lg border text-sm ${currentInterpretation.variant === 'destructive' ? 'bg-red-900/50 border-red-600 text-red-200' : ''} ${currentInterpretation.variant === 'warning' ? 'bg-yellow-900/50 border-yellow-600 text-yellow-200' : ''} ${currentInterpretation.variant === 'success' ? 'bg-green-900/50 border-green-600 text-green-200' : ''} ${currentInterpretation.variant === 'default' ? 'bg-gray-900/50 border-gray-600 text-gray-200' : ''}`}
+                                        >
+                                            <Terminal className={`h-4 w-4 ${currentInterpretation.variant === 'destructive' ? 'text-red-400' : currentInterpretation.variant === 'warning' ? 'text-yellow-400' : currentInterpretation.variant === 'success' ? 'text-green-400' : 'text-gray-400'}`} />
+                                            <AlertTitle className="text-base font-bold mb-1">
+                                                {currentInterpretation.summary}
+                                            </AlertTitle>
+                                            <AlertDescription className="space-y-1">
+                                                <p><span className="font-semibold">Advice:</span> {currentInterpretation.recommendation}</p>
+                                                <p><span className="font-semibold">Why:</span> {currentInterpretation.impact}</p>
+                                                <p className="text-xs mt-2 text-gray-400 italic">
+                                                    Note: Always be careful online. New dangers appear often.
+                                                </p>
+                                            </AlertDescription>
+                                        </Alert>
+                                    ) : (
+                                        <Alert
+                                            variant="default"
+                                            className="p-3 rounded-lg border text-sm bg-black border-accent text-gray-200"
+                                        >
+                                            <Terminal className="h-4 w-4 text-gray-400" />
+                                            <AlertTitle className="text-base font-bold mb-1">
+                                                No Analysis Yet
+                                            </AlertTitle>
+                                            <AlertDescription className="space-y-1">
+                                                <p>Enter a URL and check to see the report.</p>
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
 
                                     {/* VirusTotal Results */}
                                     <div className="space-y-2 text-sm">
                                         <h4 className="font-semibold text-gray-100">VirusTotal Checks</h4>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <div className="bg-gray-800 p-2 rounded">
+                                            <div className="bg-accent p-2 rounded">
                                                 <p className="text-green-400">Safe</p>
-                                                <p className="text-xl font-bold text-green-300">{result.attributes.stats.harmless}</p>
+                                                <p className="text-xl font-bold text-green-300">{result ? result.attributes.stats.harmless : '-'}</p>
                                             </div>
-                                            <div className="bg-gray-800 p-2 rounded">
+                                            <div className="bg-accent p-2 rounded">
                                                 <p className="text-red-400">Bad</p>
-                                                <p className="text-xl font-bold text-red-300">{result.attributes.stats.malicious}</p>
+                                                <p className="text-xl font-bold text-red-300">{result ? result.attributes.stats.malicious : '-'}</p>
                                             </div>
-                                            <div className="bg-gray-800 p-2 rounded">
+                                            <div className="bg-accent p-2 rounded">
                                                 <p className="text-yellow-400">Suspicious</p>
-                                                <p className="text-xl font-bold text-yellow-300">{result.attributes.stats.suspicious}</p>
+                                                <p className="text-xl font-bold text-yellow-300">{result ? result.attributes.stats.suspicious : '-'}</p>
                                             </div>
-                                            <div className="bg-gray-800 p-2 rounded">
+                                            <div className="bg-accent p-2 rounded">
                                                 <p className="text-blue-400">Not Checked</p>
-                                                <p className="text-xl font-bold text-blue-300">{result.attributes.stats.undetected}</p>
+                                                <p className="text-xl font-bold text-blue-300">{result ? result.attributes.stats.undetected : '-'}</p>
                                             </div>
                                         </div>
-                                        <p>Status: {result.attributes.status}</p>
-                                        <p>Date: {new Date(result.attributes.date * 1000).toLocaleString()}</p>
+                                        <p className='text-gray-300'>Status: {result ? result.attributes.status : '-'}</p>
+                                        <p className='text-gray-300'>Date: {result ? new Date(result.attributes.date * 1000).toLocaleString() : '-'}</p>
                                     </div>
 
                                     {/* Additional Checks */}
                                     <div className="space-y-2 text-sm">
-                                        <h4 className="font-semibold text-gray-100">Other Checks</h4>
-                                        <div className="flex items-center">
-                                            <AlertTriangle className="h-4 w-4 mr-1 text-yellow-400" />
-                                            <p>Suspicious Words: <Badge variant={additionalResults.isSuspiciousKeywords ? "destructive" : "secondary"}>{additionalResults.isSuspiciousKeywords ? "Yes" : "No"}</Badge></p>
+                                        <Label>Other Checks</Label>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>Suspicious Words: {additionalResults ? <Badge variant={additionalResults.isSuspiciousKeywords ? "destructive" : "secondary"}>{additionalResults.isSuspiciousKeywords ? "Yes" : "No"}</Badge> : '-'}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <Shield className="h-4 w-4 mr-1 text-red-400" />
-                                            <p>Phishing List: <Badge variant={additionalResults.openPhish ? "destructive" : "secondary"}>{additionalResults.openPhish ? "Yes" : "No"}</Badge></p>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>Phishing List: {additionalResults ? <Badge variant={additionalResults.openPhish ? "destructive" : "secondary"}>{additionalResults.openPhish ? "Yes" : "No"}</Badge> : '-'}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <Shield className="h-4 w-4 mr-1 text-blue-400" />
-                                            <p>SSL Cert: <Badge variant={additionalResults.sslStatus.includes('Valid') ? "secondary" : "destructive"}>{additionalResults.sslStatus}</Badge></p>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>SSL Cert: {additionalResults ? <Badge variant={additionalResults.sslStatus.includes('Valid') ? "secondary" : "destructive"}>{additionalResults.sslStatus}</Badge> : '-'}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <MapPin className="h-4 w-4 mr-1 text-purple-400" />
-                                            <p>Location: {additionalResults.ipGeo ? `${additionalResults.ipGeo.city}, ${additionalResults.ipGeo.country}` : "Unknown"}</p>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>Location: {additionalResults?.ipGeo ? `${additionalResults.ipGeo.city}, ${additionalResults.ipGeo.country}` : "-"}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <Globe className="h-4 w-4 mr-1 text-orange-400" />
-                                            <p>High Risk Area: <Badge variant={additionalResults.isHighRiskGeo ? "destructive" : "secondary"}>{additionalResults.isHighRiskGeo ? "Yes" : "No"}</Badge></p>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>High Risk Area: {additionalResults ? <Badge variant={additionalResults.isHighRiskGeo ? "destructive" : "secondary"}>{additionalResults.isHighRiskGeo ? "Yes" : "No"}</Badge> : '-'}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <AlertTriangle className="h-4 w-4 mr-1 text-indigo-400" />
-                                            <p>Redirects: <Badge variant={additionalResults.redirectCount > 2 ? "destructive" : "secondary"}>{additionalResults.redirectCount}</Badge></p>
+                                        <div className="flex items-center text-gray-300">
+                                            <p>Redirects: {additionalResults ? <Badge variant={additionalResults.redirectCount > 2 ? "destructive" : "secondary"}>{additionalResults.redirectCount}</Badge> : '-'}</p>
                                         </div>
-                                    </div>
-
-                                    {/* Preview */}
-                                    <div className="space-y-2 text-sm">
-                                        <h4 className="font-semibold text-gray-100">Site Preview</h4>
-                                        {additionalResults.screenshotUrl ? (
-                                            <img src={additionalResults.screenshotUrl} alt="Preview" className="w-full rounded" />
-                                        ) : (
-                                            <p className="text-gray-400">No preview. Add API key to see it.</p>
-                                        )}
                                     </div>
 
                                     {/* Buttons */}
-                                    <div className="flex justify-center space-x-3 mt-4">
-                                        <Button 
-                                            onClick={handleCopyReport}
-                                            className="flex items-center text-sm py-1"
-                                        >
-                                            <Copy className="h-3 w-3 mr-1" /> {copiedReport ? "Copied!" : "Copy Report"}
-                                        </Button>
-                                        <Button 
-                                            onClick={handleCopyShare}
-                                            className="flex items-center text-sm py-1"
-                                        >
-                                            <Share2 className="h-3 w-3 mr-1" /> {copiedShare ? "Copied!" : "Copy Share Link"}
-                                        </Button>
-                                    </div>
+                                    {result && (
+                                        <div className="flex justify-center space-x-3 mt-4">
+                                            <Button
+                                                onClick={handleCopyReport}
+                                                className="flex items-center text-sm py-1"
+                                            >
+                                                <Copy className="h-3 w-3 mr-1" /> {copiedReport ? "Copied!" : "Copy Report"}
+                                            </Button>
+                                            <Button
+                                                onClick={handleCopyShare}
+                                                className="flex items-center text-sm py-1"
+                                            >
+                                                <Share2 className="h-3 w-3 mr-1" /> {copiedShare ? "Copied!" : "Copy Share Link"}
+                                            </Button>
+                                        </div>
+                                    )}
 
-                                    <p className="mt-4 text-sm text-gray-400 text-center">
-                                        See full report: <a href={result.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">VirusTotal</a>
-                                    </p>
+                                    {result && (
+                                        <p className="mt-4 text-sm text-gray-400 text-center">
+                                            See full report: <a href={result.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">VirusTotal</a>
+                                        </p>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </Card>
+            </div>
         </div>
-    );
+    )
 }
+
+export default page
