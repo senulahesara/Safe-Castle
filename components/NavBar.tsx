@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 const menuItems = [
-    { name: 'Features', href: '#' },
-    { name: 'Solution', href: '#' },
-    { name: 'Pricing', href: '#' },
+    { name: 'URL', href: '/url' },
+    { name: 'Password', href: '/password' },
+    { name: 'Live Threat Map', href: '/map' },
     { name: 'About', href: '#' },
 ]
 
