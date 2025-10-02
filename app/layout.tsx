@@ -15,12 +15,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Respawn",
-  description: "Join the ultimate hub for gamers to share fan theories and epic game lore.",
-  // icons: {
-  //   icon: "/favicon.svg",
-  //   apple: "/favicon.svg",
-  // }
+  title: "Safe Castle",
+  description: "Your Castle Against Digital Threats",
+  icons: {
+    icon: "/logoDark.svg",
+    apple: "/favicon.svg",
+  }
 };
 
 export default function RootLayout({

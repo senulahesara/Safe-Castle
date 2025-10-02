@@ -7,7 +7,7 @@ const menuItems = [
     { name: 'URL', href: '/url' },
     { name: 'Password', href: '/password' },
     { name: 'Live Threat Map', href: '/map' },
-    { name: 'About', href: '#' },
+    { name: 'SSL / TLS', href: '/ssl' },
 ]
 
 export function NavBar() {
@@ -56,8 +56,8 @@ export function NavBar() {
                                     <Button
                                         asChild
                                         size="sm">
-                                        <Link href="#">
-                                            <span>Login</span>
+                                        <Link href="/tools">
+                                            <span>All Tools</span>
                                         </Link>
                                     </Button>
                                 </div>

@@ -23,8 +23,8 @@ export function HeroSection() {
                                     </div>
                                 </div>
 
-                                <h1 className="mt-10 text-balance text-4xl font-bold md:text-5xl xl:text-5xl">Production Ready Digital Marketing blocks</h1>
-                                <p className="mt-8">Error totam sit illum. Voluptas doloribus asperiores quaerat aperiam. Quidem harum omnis beatae ipsum soluta!</p>
+                                <h1 className="mt-10 text-balance text-4xl font-bold md:text-5xl xl:text-5xl">Your Castle Against Digital Threats</h1>
+                                <p className="mt-8">From phishing links to data leaks, defend your online world with one free, open-source toolkit.</p>
 
                                 <div>
                                     <div className="mx-auto my-10 max-w-sm lg:my-12 lg:ml-0 lg:mr-auto">
