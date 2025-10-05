@@ -4,13 +4,13 @@ import React from 'react'
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ClipboardPaste, Link, Loader, Terminal } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Shield, MapPin, AlertTriangle, ImageIcon, Copy, Share2 } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from '@/components/ui/label';
 import { NavBar } from '@/components/NavBar';
@@ -246,9 +246,9 @@ function page() {
 
             // Calculate risk score
             calculateRiskScore(analysisResult, addResults);
-        } catch (err: any) {
+        } catch (err) {
             const errorMessage =
-                (err && err.message) || "Something went wrong. Please try again.";
+                 "Something went wrong. Please try again.";
 
             toast.error("Error", {
                 description: errorMessage,
@@ -426,7 +426,11 @@ function page() {
                                         {/* Alert */}
                                         {currentInterpretation ? (
                                             <Alert
-                                                variant={currentInterpretation.variant as any}
+                                                variant={
+                                                    currentInterpretation.variant === "destructive"
+                                                        ? "destructive"
+                                                        : "default"
+                                                }
                                                 className={`p-3 rounded-lg border text-sm ${currentInterpretation.variant === 'destructive' ? 'bg-red-900/50 border-red-600 text-red-200' : ''} ${currentInterpretation.variant === 'warning' ? 'bg-yellow-900/50 border-yellow-600 text-yellow-200' : ''} ${currentInterpretation.variant === 'success' ? 'bg-green-900/50 border-green-600 text-green-200' : ''} ${currentInterpretation.variant === 'default' ? 'bg-gray-900/50 border-gray-600 text-gray-200' : ''}`}
                                             >
                                                 <Terminal className={`h-4 w-4 ${currentInterpretation.variant === 'destructive' ? 'text-red-400' : currentInterpretation.variant === 'warning' ? 'text-yellow-400' : currentInterpretation.variant === 'success' ? 'text-green-400' : 'text-gray-400'}`} />

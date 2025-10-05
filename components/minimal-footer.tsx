@@ -4,6 +4,7 @@ import {
 	LinkedinIcon,
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export function MinimalFooter() {
 	const year = new Date().getFullYear();
@@ -36,9 +37,9 @@ export function MinimalFooter() {
 				<div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-10">
 					{/* Logo + Social */}
 					<div className="md:col-span-6 flex flex-col gap-5">
-						<a href="/" className="w-max">
+						<Link href="/" className="w-max">
 							<Image src="/logoDark.svg" alt="Logo" width={40} height={40} />
-						</a>
+						</Link>
 						<p className="text-muted-foreground max-w-md font-mono text-sm leading-relaxed">
 							Your Castle Against Digital Threats
 						</p>

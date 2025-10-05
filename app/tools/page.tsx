@@ -45,10 +45,10 @@ const platformFeatures: Feature[] = [
   },
 ];
 
-export default function page() {
+export default function Features() {
   return (
     <>
-      <NavBar />
+      
       <div className="w-full max-w-6xl mx-auto p-4 md:p-8">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

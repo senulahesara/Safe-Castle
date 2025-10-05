@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Award, CheckCircle, ClipboardPaste, Clock, Globe, Link, Loader, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
+import { Award, CheckCircle, ClipboardPaste, Clock, Globe, Loader, ShieldCheck, XCircle } from 'lucide-react';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
 
@@ -89,7 +89,7 @@ const defaultCert: CertificateDetail = {
 
 export default function page() {
 
-    const [domain, setDomain] = useState('');
+    const [domain, setDomain] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [certDetails, setCertDetails] = useState<CertificateDetail | null>(null);

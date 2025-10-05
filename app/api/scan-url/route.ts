@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
             console.error("VirusTotal get URL error:", errorData);
             return NextResponse.json({ message: errorData.error?.message || 'Failed to check existing URL analysis.' }, { status: getResponse.status });
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("API route error during URL submission:", error);
         return NextResponse.json({ message: 'Internal server error during URL submission.' }, { status: 500 });
     }

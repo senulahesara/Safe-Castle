@@ -1,6 +1,7 @@
 "use client";
 
 import { NavBar } from "@/components/NavBar";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -23,7 +24,7 @@ export default function GitHubPreview() {
 
             <div className="w-full max-w-7xl mx-auto mt-10">
                 <Link href="https://github.com/senulahesara/Safe-Castle" target="_blank" rel="noopener noreferrer">
-                    <img
+                    <Image
                         src={repoImage}
                         alt="Safe-Castle GitHub Preview"
                         className="w-full h-auto rounded-lg shadow"

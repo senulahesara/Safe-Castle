@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error) {
     console.error("API route error during report retrieval:", error);
     return NextResponse.json({ message: 'Internal server error during report retrieval.' }, { status: 500 });
   }

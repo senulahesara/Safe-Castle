@@ -1,6 +1,7 @@
 'use client'
 import { LinkInput } from './ui/link-Input'
 import { NavBar } from './NavBar'
+import Image from 'next/image'
 
 export function HeroSection() {
     return (
@@ -37,14 +38,14 @@ export function HeroSection() {
                         <div className="absolute inset-0 -mx-4 rounded-3xl p-3 lg:col-span-3">
                             <div aria-hidden className="absolute z-[1] inset-0 bg-gradient-to-r from-background from-35%" />
                             <div className="relative">
-                                <img
+                                <Image
                                     className="hidden dark:block"
                                     src="/heroDark.svg"
                                     alt="app illustration"
                                     width={2796}
                                     height={2008}
                                 />
-                                <img
+                                <Image
                                     className="dark:hidden"
                                     src="/heroLight.svg"
                                     alt="app illustration"

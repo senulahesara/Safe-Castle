@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 const menuItems = [
     { name: 'URL', href: '/url' },
@@ -73,14 +74,14 @@ export function NavBar() {
 const Logo = () => {
     return (
         <>
-            <img
+            <Image
                 className="hidden dark:block"
                 src="/logoDark.svg"
                 alt="app illustration"
                 width={40}
                 height={40}
             />
-            <img
+            <Image
                 className="dark:hidden"
                 src="/logoLight.svg"
                 alt="app illustration"

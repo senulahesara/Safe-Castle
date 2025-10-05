@@ -10,7 +10,7 @@ import {
 import React, { useEffect, useState } from "react";
 
 export default function Page() {
-    const [ipInfo, setIpInfo] = useState<any>(null);
+    const [ipInfo, setIpInfo] = useState<string | any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export default function Page() {
                 }
                 const data = await res.json();
                 setIpInfo(data);
-            } catch (err: any) {
+            } catch (err: string | any) {
                 setError(err.message);
             } finally {
                 setLoading(false);

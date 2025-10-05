@@ -40,7 +40,7 @@ interface CertificateDetail {
     ctStatus: {
         enabled: boolean;
         logsCount: number;
-        logs: any[];
+        logs: string;
     };
     revocationUris: {
         crl: string[];
@@ -124,7 +124,7 @@ export async function GET(request: Request) {
             publicKeySize: certData.cert_pubkey_size || 0,
             keyUsages: certData.cert_key_usage || [],
             extendedKeyUsages: certData.cert_ext_key_usage || [],
-            ciphers: (certData.ciphers || []).map((c: any) => ({
+            ciphers: (certData.ciphers || []).map((c: { name: string; strength: string; forward_secrecy: string; }) => ({
                 name: c.name || "Unknown",
                 strength: c.strength || "Unknown",
                 forwardSecrecy: !!c.forward_secrecy,
@@ -140,7 +140,7 @@ export async function GET(request: Request) {
             isSelfSigned: !!certData.cert_self_signed,
             isExpired: new Date(certData.valid_till) < new Date(),
             dnsStatus: certData.dns_valid ? "OK" : "Failed",
-            certificateChain: (certData.chain || []).map((c: any) => ({
+            certificateChain: (certData.chain || []).map((c: { cn: string; issuer: string; validity: string; sn: string; pubkey_size: string; }) => ({
                 commonName: c.cn || "Unknown",
                 issuer: c.issuer || "Unknown",
                 validity: c.validity || "Unknown",
