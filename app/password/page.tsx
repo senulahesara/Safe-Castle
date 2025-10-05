@@ -3,7 +3,7 @@ import { NavBar } from '@/components/NavBar'
 import PasswordStrengthChecker from '@/components/password-strength-checker'
 import React from 'react'
 
-function page() {
+function Page() {
   return (
     <>
       <NavBar />
@@ -12,4 +12,4 @@ function page() {
   )
 }
 
-export default page
+export default Page

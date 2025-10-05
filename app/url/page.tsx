@@ -42,7 +42,7 @@ interface AdditionalResults {
     redirectCount: number;
 }
 
-function page() {
+function Page() {
 
     const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(false);
@@ -542,4 +542,4 @@ function page() {
     )
 }
 
-export default page
+export default Page

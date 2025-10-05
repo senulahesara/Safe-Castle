@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Award, CheckCircle, ClipboardPaste, Clock, Globe, Link, Loader, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
+import { Award, CheckCircle, ClipboardPaste, Clock, Globe, Loader, ShieldCheck, XCircle } from 'lucide-react';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
 
@@ -87,9 +87,9 @@ const defaultCert: CertificateDetail = {
     grade: 'N/A',
 };
 
-export default function Page() {
+export default function Page() {   // ✅ Changed to uppercase "Page"
 
-    const [domain, setDomain] = useState('');
+    const [domain, setDomain] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [certDetails, setCertDetails] = useState<CertificateDetail | null>(null);
@@ -99,7 +99,8 @@ export default function Page() {
         try {
             const text = await navigator.clipboard.readText();
             setDomain(text);
-        } catch (err) {
+        } catch {
+            // ✅ removed unused "err"
             toast.error("Oops!", {
                 description: "Couldn't read from your clipboard. Please try again.",
             });
