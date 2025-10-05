@@ -9,8 +9,29 @@ import {
 } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 
+type IpInfo = {
+    ip: string;
+    hostname?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    org?: string;
+    asn?: {
+        asn: string;
+        name: string;
+        domain: string;
+        type: string;
+    };
+    privacy?: {
+        vpn?: boolean;
+        proxy?: boolean;
+        tor?: boolean;
+        hosting?: boolean;
+    };
+};
+
 export default function Page() {
-    const [ipInfo, setIpInfo] = useState<string | any>(null);
+    const [ipInfo, setIpInfo] = useState<IpInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +46,8 @@ export default function Page() {
                 }
                 const data = await res.json();
                 setIpInfo(data);
-            } catch (err: string | any) {
-                setError(err.message);
+            } catch (err) {
+                setError("Failed to fetch IP information. Please try again later.");
             } finally {
                 setLoading(false);
             }
@@ -56,7 +77,7 @@ export default function Page() {
     return (
         <>
             <NavBar />
-            <div className="flex justify-center mt-10 px-4">
+            <div className="flex justify-center px-4 my-36">
                 <Card className="w-full max-w-3xl shadow-lg">
                     <CardHeader className="text-2xl md:text-3xl font-bold">
                         VPN & Proxy Checker
