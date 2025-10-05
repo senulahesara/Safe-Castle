@@ -1,7 +1,7 @@
 "use client"
 
-import React from 'react'
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,7 +42,7 @@ interface AdditionalResults {
     redirectCount: number;
 }
 
-function Page() {
+function PageContent() {
 
     const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(false);
@@ -248,7 +248,7 @@ function Page() {
             calculateRiskScore(analysisResult, addResults);
         } catch (err) {
             const errorMessage =
-                 "Something went wrong. Please try again.";
+                "Something went wrong. Please try again.";
 
             toast.error("Error", {
                 description: errorMessage,
@@ -542,4 +542,11 @@ function Page() {
     )
 }
 
-export default Page
+// ✅ Wrap PageContent in Suspense at the boundary
+export default function Page() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+            <PageContent />
+        </Suspense>
+    );
+}
